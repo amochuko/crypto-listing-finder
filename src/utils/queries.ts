@@ -13,10 +13,10 @@ export async function getNewListingsFromCoinmarketcap(
 
   try {
     const latestListings = await axios.get(
-      process.env.COINMARKETCAP_LASTEST_LISTINGS_URL,
+      "https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest",
       {
         headers: {
-          "X-CMC_PRO_API_KEY": process.env.COINMARKETCAP_APIKEY,
+          "X-CMC_PRO_API_KEY": COINMARKETCAP_API_KEY,
           Accept: "application/json",
           "Accept-Encoding": "deflate, gzip",
         },
