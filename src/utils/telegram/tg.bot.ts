@@ -8,7 +8,7 @@ import { getNewListingsFromCoinmarketcap } from "../queries";
  * @param liquidity
  * @returns bot {Telegraf<Context<Update>>}
  */
-export async function runTelegramBot(liquidity = 100_000_000_000) {
+export async function runTelegramBot(liquidity = 200_000_000) {
   const bot = new Telegraf(TELEGRAM_BOT_TOKEN);
 
   try {
