@@ -1,17 +1,14 @@
 import axios from "axios";
-import { MinLiquidity, Token } from "../types";
+import { GetNewListingsArgs, Token } from "../types";
 import { COINMARKETCAP_API_KEY } from "./env.config";
-import { sendTelegramMessage } from "./telegram/tg.bot";
-
-enum Network {
-  eth = "ethereum",
-}
 
 /**
  *
  * @param minLiquidity {number} minimum amount of liquidity
  */
-async function getNewListingsFromCoinmarketcap({ minLiquidity }: MinLiquidity) {
+export async function getNewListingsFromCoinmarketcap(
+  args: GetNewListingsArgs
+) {
   let msg = "";
 
   try {
@@ -28,17 +25,27 @@ async function getNewListingsFromCoinmarketcap({ minLiquidity }: MinLiquidity) {
 
     // Filter tokens with pools in specified dex platforms and liquidity greater than minLiquidity
     let filteredTokens = latestListings?.data?.data.filter((token: Token) => {
+      const platformName = token.platform?.name;
+      const volume24h = token.quote?.USD?.volume_24h;
+
       if (
-        token.platform &&
-        token.platform["name"].toLowerCase() == "ethereum" &&
-        token.quote.USD.volume_24h > minLiquidity
+        platformName?.toLowerCase() === args.network &&
+        volume24h >= args.minLiquidity
       ) {
-        return token;
+        return true;
       }
+
+      return false;
     });
 
     const tokenIdArr = [];
-    const tokenInfoRequest = filteredTokens.slice(0, 10).map(async (token) => {
+    // Take first 10 tokens and fetch for more info if `args.take` is not provided
+    const numberOfTokenToFetch = args.take || 10;
+    const takeLimitedNumberOfToken = filteredTokens.slice(
+      0,
+      numberOfTokenToFetch
+    );
+    const tokenInfoRequest = takeLimitedNumberOfToken.map(async (token) => {
       tokenIdArr.push(token.id);
 
       return await axios.get(
@@ -82,16 +89,6 @@ async function getNewListingsFromCoinmarketcap({ minLiquidity }: MinLiquidity) {
     });
 
     result.forEach((token: any, i: number) => {
-      // check for token platform
-      const hasContractAddress = token?.contract_address[i];
-      if (
-        hasContractAddress &&
-        hasContractAddress["platform"]["name"].toLowerCase() === Network.eth
-      ) {
-        console.log("yes");
-
-        // console.log(hasContractAddress['name'].toLowerCase() === Network.eth);
-      }
       if (token !== undefined) {
         let sortedChat = token.urls?.chat.sort((a, b) => a - b);
         let discord,
@@ -118,19 +115,10 @@ async function getNewListingsFromCoinmarketcap({ minLiquidity }: MinLiquidity) {
     });
 
     console.log(`Fetched and parsed token listings from Coinmarketcap`);
-    console.log(msg);
 
     return msg;
   } catch (err) {
-    console.error(`getNewListings():`, err.message);
+    console.error(`getNewListings():`, err.message, err.stack);
     throw Error(err);
   }
-}
-
-export async function getNewListingsAndPushToTelegram(liquidity = 10_000_000) {
-  const msg = await getNewListingsFromCoinmarketcap({
-    minLiquidity: liquidity,
-  });
-
-  await sendTelegramMessage(msg);
 }
