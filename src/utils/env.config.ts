@@ -1,0 +1,6 @@
+import "dotenv/config";
+
+const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+const COINMARKETCAP_API_KEY = process.env.COINMARKETCAP_API_KEY;
+
+export { COINMARKETCAP_API_KEY, TELEGRAM_BOT_TOKEN };
