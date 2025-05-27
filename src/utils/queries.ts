@@ -25,19 +25,24 @@ export async function getNewListingsFromCoinmarketcap(
     );
 
     // Filter tokens with pools in specified dex platforms and liquidity greater than minLiquidity
-    let filteredTokens = latestListings?.data?.data.filter((token: Token) => {
-      const platformName = token.platform?.name;
-      const volume24h = token.quote?.USD?.volume_24h;
+    let filteredTokens = latestListings?.data?.data
+      .filter((token: Token) => {
+        const platformName = token.platform?.name;
+        const volume24h = token.quote?.USD?.volume_24h;
 
-      if (
-        platformName?.toLowerCase() === args.network &&
-        volume24h >= args.minLiquidity
-      ) {
-        return true;
-      }
+        if (
+          platformName?.toLowerCase() === args.network &&
+          volume24h >= args.minLiquidity
+        ) {
+          return true;
+        }
 
-      return false;
-    });
+        return false;
+      })
+      .sort(
+        (a, b) =>
+          (b.quote?.USD?.volume_24h ?? 0) - (a.quote?.USD?.volume_24h ?? 0)
+      );
 
     const tokenIdArr = [];
     // Take first 10 tokens and fetch for more info if `args.take` is not provided
@@ -47,7 +52,7 @@ export async function getNewListingsFromCoinmarketcap(
       numberOfTokenToFetch
     );
     const tokenInfoRequest = takeLimitedNumberOfToken.map(async (token) => {
-      tokenIdArr.push(token.id);
+      tokenIdArr.push({ tokenId: token.id, quote: token.quote });
 
       return await axios.get(
         `https://pro-api.coinmarketcap.com/v2/cryptocurrency/info?id=${token.id}`,
@@ -65,7 +70,7 @@ export async function getNewListingsFromCoinmarketcap(
 
     const result = tokenInfoResponse.map((resp: any, i) => {
       //
-      let hasToken = resp.data.data[tokenIdArr[i]];
+      let hasToken = resp.data.data[tokenIdArr[i].tokenId];
       let hasChatMedium = hasToken.urls && hasToken.urls.chat.length > 0;
 
       if (resp.data.status.error_code === 0 && hasChatMedium) {
@@ -76,7 +81,7 @@ export async function getNewListingsFromCoinmarketcap(
           contract_address,
           infinite_supply,
           platform,
-        } = resp.data.data[tokenIdArr[i]];
+        } = resp.data.data[tokenIdArr[i].tokenId];
 
         return {
           name,
@@ -85,6 +90,7 @@ export async function getNewListingsFromCoinmarketcap(
           infinite_supply,
           platform,
           urls,
+          quote: tokenIdArr[i].quote,
         };
       }
     });
@@ -92,6 +98,8 @@ export async function getNewListingsFromCoinmarketcap(
     result.forEach((token: any, i: number) => {
       if (token !== undefined) {
         const volume24hr = token.quote?.USD?.volume_24h;
+        const percent_change_24h = token.quote?.USD?.percent_change_24h;
+        const price = token.quote?.USD?.price;
 
         let sortedChat = token.urls?.chat.sort((a, b) => a - b);
         let discord,
@@ -107,7 +115,12 @@ export async function getNewListingsFromCoinmarketcap(
 
         msg += `
                   Token Name: ${token.name || "NA"}
-                  24hr Trade Volume: ${formatUSDCompact(parseInt(volume24hr))}
+                  Price: ${formatUSDCompact(parseInt(price), "standard", 10)}
+                  24hr Trade Volume: ${formatUSDCompact(
+                    parseInt(volume24hr),
+                    "compact"
+                  )}
+                  24hr % Change: ${parseFloat(percent_change_24h.toFixed(2))}
                   Website: ${token.urls?.website?.[0] || "NA"}
                   Twitter: ${token.urls?.twitter?.[0] || "NA"}
                   Telegram: ${telegram || "NA"}
@@ -122,7 +135,7 @@ export async function getNewListingsFromCoinmarketcap(
 
     return msg;
   } catch (err) {
-    console.error(`getNewListings():`, err.message, err.stack);
+    console.error(`getNewListings():`, err.message);
     throw Error(err);
   }
 }
