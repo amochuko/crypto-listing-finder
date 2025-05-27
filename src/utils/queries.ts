@@ -120,7 +120,9 @@ export async function getNewListingsFromCoinmarketcap(
                     parseInt(volume24hr),
                     "compact"
                   )}
-                  24hr % Change: ${parseFloat(percent_change_24h.toFixed(2))}
+                  24hr Percent Change: ${parseFloat(
+                    percent_change_24h.toFixed(2)
+                  )}%
                   Website: ${token.urls?.website?.[0] || "NA"}
                   Twitter: ${token.urls?.twitter?.[0] || "NA"}
                   Telegram: ${telegram || "NA"}
