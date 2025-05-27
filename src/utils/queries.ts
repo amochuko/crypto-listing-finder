@@ -90,6 +90,8 @@ export async function getNewListingsFromCoinmarketcap(
 
     result.forEach((token: any, i: number) => {
       if (token !== undefined) {
+        const volume24hr = token.quote?.USD?.volume_24h;
+
         let sortedChat = token.urls?.chat.sort((a, b) => a - b);
         let discord,
           telegram = "";
@@ -104,6 +106,7 @@ export async function getNewListingsFromCoinmarketcap(
 
         msg += `
                   Token Name: ${token.name || "NA"}
+                  24hr Trade Volume: ${volume24hr}
                   Website: ${token.urls?.website?.[0] || "NA"}
                   Twitter: ${token.urls?.twitter?.[0] || "NA"}
                   Telegram: ${telegram || "NA"}
