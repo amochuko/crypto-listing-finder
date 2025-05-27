@@ -1,6 +1,6 @@
 # Token listing Finder
 
-This is a telegram bot which sources for listed Tokens/Cryptocurrency via Coinmarketcap API. It filters the listing by a marketcap that defaults to a minimum of 10_000_000.
+This is a telegram bot which sources for listed Tokens/Cryptocurrency in the Ethereum network via Coinmarketcap API. It filters the listing by a 24hr trading volume that defaults to a minimum of 10_000_000.
 
 Other feature is coming in soon.
 
