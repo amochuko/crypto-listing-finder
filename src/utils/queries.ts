@@ -1,6 +1,7 @@
 import axios from "axios";
 import { GetNewListingsArgs, Token } from "../types";
 import { COINMARKETCAP_API_KEY } from "./env.config";
+import { formatUSDCompact } from "./helpers";
 
 /**
  *
@@ -106,7 +107,7 @@ export async function getNewListingsFromCoinmarketcap(
 
         msg += `
                   Token Name: ${token.name || "NA"}
-                  24hr Trade Volume: ${volume24hr}
+                  24hr Trade Volume: ${formatUSDCompact(parseInt(volume24hr))}
                   Website: ${token.urls?.website?.[0] || "NA"}
                   Twitter: ${token.urls?.twitter?.[0] || "NA"}
                   Telegram: ${telegram || "NA"}
