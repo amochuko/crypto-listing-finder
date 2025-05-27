@@ -1,15 +1,19 @@
 import { Telegraf } from "telegraf";
+import { BlockchainNetwork } from "../../types";
 import { TELEGRAM_BOT_TOKEN } from "../env.config";
+import { getNewListingsFromCoinmarketcap } from "../queries";
 
-interface TelegramReponse {
-  data: Record<string, any>;
-  [key: string]: any;
-}
+/**
+ * The bot function that accept in the liquidity value via terminal input (at the moment)
+ * @param liquidity
+ * @returns bot {Telegraf<Context<Update>>}
+ */
+export async function runTelegramBot(liquidity = 100_000_000) {
+  const bot = new Telegraf(TELEGRAM_BOT_TOKEN);
 
-const bot = new Telegraf(TELEGRAM_BOT_TOKEN);
-
-export async function sendTelegramMessage(msg: string) {
   try {
+    console.log("Bot activated!");
+
     bot.command("start", (ctx) => {
       bot.telegram.sendMessage(
         ctx.chat.id,
@@ -18,8 +22,20 @@ export async function sendTelegramMessage(msg: string) {
       );
     });
 
-    bot.command("newlistings", (ctx) => {
-      bot.telegram.sendMessage(ctx.chat.id, msg);
+    bot.command("newlistings", async (ctx) => {
+      console.log("newlisting requested.");
+      
+      try {
+        const msg = await getNewListingsFromCoinmarketcap({
+          minLiquidity: liquidity,
+          network: BlockchainNetwork.eth,
+          take: 10,
+        });
+
+        bot.telegram.sendMessage(ctx.chat.id, msg);
+      } catch (err) {
+        console.error("Error newListtings()", err);
+      }
     });
 
     bot.command("about", (ctx) => {
@@ -29,15 +45,10 @@ export async function sendTelegramMessage(msg: string) {
       );
     });
 
-    bot.command("demo", (ctx) => {
-      bot.telegram.sendMessage(
-        ctx.chat.id,
-        "For a starter, try sending me `/newlistings`."
-      );
-    });
-
     bot.launch();
+
+    return bot;
   } catch (error) {
-    console.log("Error sending Telegram message:", error);
+    console.error("Error sending Telegram message:", error);
   }
 }
