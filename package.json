@@ -1,7 +1,7 @@
 {
-  "name": "dex-listing-finder",
+  "name": "crypto-listing-finder",
   "version": "0.0.1",
-  "description": "Decentralized Exchange token listings finder",
+  "description": "This app sources for the latest listed Tokens/Cryptocurrency via Coinmarketcap API, filtering the list by marketcap (defaults to 10_000_000)",
   "main": "src/main.ts",
   "scripts": {
     "test": "jest --watch",
