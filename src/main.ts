@@ -1,15 +1,7 @@
-import 'dotenv/config';
-import { processNewListings } from './app';
-import { sendTelegramMessage } from './utils';
+import { getNewListingsAndPushToTelegram } from "./utils/queries";
 
 async function main(argv: string[]) {
-  const liquidity = argv[2];
-
-  const msg = await processNewListings({
-    minLiquidity: parseInt(liquidity) || 10_000_000,
-  });
-
-  await sendTelegramMessage(msg);
+  await getNewListingsAndPushToTelegram(parseInt(argv[2]));
 }
 
 main(process.argv).catch((err) => {
@@ -18,13 +10,13 @@ main(process.argv).catch((err) => {
 });
 
 process
-  .on('unhandledRejection', (why) => {
+  .on("unhandledRejection", (why) => {
     console.error(why ?? {}, `Unhandled rejection: ${(why as Error)?.message}`);
   })
-  .on('SIGTERM', () => {
-    console.error('SIGTERM signal received: closing HTTP server');
+  .on("SIGTERM", () => {
+    console.error("SIGTERM signal received: closing HTTP server");
   })
-  .on('uncaughtException', (err) => {
+  .on("uncaughtException", (err) => {
     console.error(err, `Uncaught Exception: ${err.message}`);
     process.exitCode = 1;
   });
